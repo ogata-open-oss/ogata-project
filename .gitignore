@@ -1,0 +1,21 @@
+# ─── Environment & secrets (NEVER commit) ───
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# ─── Node / pnpm / Cloudflare ───
+node_modules/
+dist/
+.wrangler/
+coverage/
+*.tsbuildinfo
+# pnpm is the package manager here — block stray npm/yarn lockfiles
+package-lock.json
+yarn.lock
+
+# ─── Editors & OS ───
+.idea
+.vscode
+.DS_Store
+*.log

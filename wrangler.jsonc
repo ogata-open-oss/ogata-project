@@ -1,0 +1,58 @@
+// The OSS deployment config — what a "Deploy to Cloudflare" user gets. In the public repo this
+// file sits at the repo root as `wrangler.jsonc`; in the private repo it lives under `oss/` and
+// is validated on every build (`wrangler deploy --dry-run --config oss/wrangler.jsonc`).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ogata-project",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-20",
+  "compatibility_flags": ["nodejs_compat"],
+  // The workers.dev URL IS this connector's address (https://<name>.<subdomain>.workers.dev/mcp)
+  // — it must stay enabled, and it's also the callback host for the OAuth app registration.
+  // Attach a custom domain later if you prefer; nothing else changes. Known quirk: the INITIAL
+  // Deploy-button provisioning can leave the route disabled despite this setting — enable it once
+  // in the dashboard (Settings → Domains & Routes); every later deploy honours it.
+  "workers_dev": true,
+  // Bindings are declared WITHOUT ids (and R2 without a bucket name) on purpose: Wrangler
+  // auto-provisioning creates the resources in YOUR account on first deploy — the Deploy button
+  // flow needs no pre-created resources and no account-scoped ids in git. Provisioned ids are
+  // kept account-side; they are NOT written back to this file.
+  "r2_buckets": [
+    {
+      // The default (and only, out of the box) store. Add more stores = one binding here + one
+      // entry in src/buckets.ts (e.g. BUCKET_ARCHIVE / BUCKET_MEDIA) + one field in src/env.ts.
+      "binding": "BUCKET","bucket_name": "ogata-bucket","preview_bucket_name": "ogata-bucket",
+    },
+  ],
+  "kv_namespaces": [
+    // NOTE: KV bindings have no name field (unlike D1's database_name / R2's bucket name), and
+    // KV titles are unique per account — both namespaces default to the Worker's name on the
+    // Deploy-button setup page, which makes the SECOND one fail to provision. Give them distinct
+    // names there (e.g. lemurkit-oauth / lemurkit-memory); the binding names below never change.
+    // OAuth tokens/grants/clients — never mixed with app data.
+    { "binding": "OAUTH_KV","id": "f38b10eef20846d29ccbcfe5f37a1b70" },
+    // The shared-memory tools' store, separate from auth state on purpose.
+    { "binding": "MEMORY_KV","id": "633d3d9e8c464b248b872b15496cda76" },
+  ],
+  // The object-metadata + full-text index behind query_files/search_files. The database_name is
+  // what the migrations command addresses:
+  //   npx wrangler d1 migrations apply lemurkit-metadata --remote
+  "d1_databases": [
+    {
+      "binding": "METADATA_DB",
+      "database_name": "ogata-metadata","database_id": "cbdeec68-a9f4-4c7d-a8b9-cfddbadee672",
+    },
+  ],
+  // ── Optional semantic tier ─────────────────────────────────────────────────────────────────
+  // semantic_search (vector search by meaning) is OFF by default: Vectorize is not
+  // auto-provisioned, and embedding runs Workers AI per text write (a small per-write cost).
+  // To enable:
+  //   1. npx wrangler vectorize create lemurkit-objects --dimensions=1024 --metric=cosine
+  //   2. Uncomment both bindings below and deploy (push, if using Workers Builds).
+  //   3. Run the index_bucket tool once per bucket to embed existing objects.
+  // "ai": { "binding": "AI" },
+  // "vectorize": [{ "binding": "VECTORIZE", "index_name": "lemurkit-objects" }],
+  "observability": {
+    "enabled": true,
+  },
+}

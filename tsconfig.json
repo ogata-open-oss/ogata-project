@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["@cloudflare/workers-types"],
+    // `core/` is consumed as TypeScript source and bundled with the Worker — this alias is the
+    // whole "dependency": tsc, wrangler's esbuild, and vitest (see vitest.config.ts) all resolve
+    // `@lemurkit/core` through it. No npm package required.
+    "paths": {
+      "@lemurkit/core": ["./core/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "core/src/**/*.ts", "core/test/**/*.ts"]
+}
